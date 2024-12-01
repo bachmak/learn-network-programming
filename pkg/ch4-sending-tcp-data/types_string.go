@@ -3,24 +3,20 @@ package ch4
 import (
 	"encoding/binary"
 	"io"
-    "errors"
 )
 
 type String string
 
+func NewString() *String { return new(String) }
+
 func (m String) Bytes() []byte { return []byte(m) }
 
-func (m String) String() string { return m }
+func (m String) String() string { return string(m) }
 
 func (m String) WriteTo(w io.Writer) (int64, error) {
     var n int64 = 0
-    err := binary.Write(w, binary.BigEndian, uint8(StringType))
-    if err != nil {
-        return n, err
-    }
-    n += 1
 
-    err = binary.Write(w, binary.BigEndian, uint32(len(m)))
+    err := binary.Write(w, binary.BigEndian, uint32(len(m)))
     if err != nil {
         return n, err
     }
@@ -37,20 +33,9 @@ func (m String) WriteTo(w io.Writer) (int64, error) {
 
 func (m* String) ReadFrom(r io.Reader) (int64, error) {
     var n int64 = 0
-    var typ uint8
-
-    err := binary.Read(r, binary.BigEndian, &typ)
-    if err != nil {
-        return n, err
-    }
-    n += 1
-
-    if typ != StringType {
-        return n, errors.New("invalid String")
-    }
-
     var size uint32
-    err = binary.Read(r, binary.BigEndian, &size)
+
+    err := binary.Read(r, binary.BigEndian, &size)
     if err != nil {
         return n, err
     }

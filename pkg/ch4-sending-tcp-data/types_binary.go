@@ -2,11 +2,12 @@ package ch4
 
 import (
     "encoding/binary"
-    "errors"
     "io"
 )
 
 type Binary []byte
+
+func NewBinary() *Binary { return &Binary{} }
 
 func (m Binary) Bytes() []byte { return m }
 
@@ -14,13 +15,8 @@ func (m Binary) String() string { return string(m) }
 
 func (m Binary) WriteTo(w io.Writer) (int64, error) {
     var n int64 = 0
-    err := binary.Write(w, binary.BigEndian, uint8(BinaryType))
-    if err != nil {
-        return n, err
-    }
-    n += 1
 
-    err = binary.Write(w, binary.BigEndian, uint32(len(m)))
+    err := binary.Write(w, binary.BigEndian, uint32(len(m)))
     if err != nil {
         return n, err
     }
@@ -37,18 +33,9 @@ func (m Binary) WriteTo(w io.Writer) (int64, error) {
 
 func (m *Binary) ReadFrom(r io.Reader) (int64, error) {
     var n int64 = 0
-    var typ uint8
-    err := binary.Read(r, binary.BigEndian, &typ)
-    if err != nil {
-        return n, err
-    }
-    n += 1
-
-    if typ != BinaryType {
-        return n, errors.New("invalid Binary")
-    }
     var size uint32
-    err = binary.Read(r, binary.BigEndian, &size)
+
+    err := binary.Read(r, binary.BigEndian, &size)
     if err != nil {
         return n, err
     }
