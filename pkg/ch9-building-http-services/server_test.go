@@ -3,6 +3,7 @@ package ch9
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"learn-network-programming/pkg/ch9-building-http-services/handlers"
@@ -48,7 +49,7 @@ func runSimpleHTTPServer(addr string, done chan error, ctx context.Context) {
 			server.Close()
 		}()
 
-		done <- server.Serve(listener)
+		done <- server.ServeTLS(listener, "ch9.pem", "ch9-key.pem")
 	}()
 }
 
@@ -59,7 +60,7 @@ func TestSimpleHTTPServer(t *testing.T) {
 	// create a context to cancel the server
 	ctx, cancel := context.WithCancel(context.Background())
 	// address to run server at
-	addr := "127.0.0.1:8081"
+	addr := "127.0.0.1:8443"
 	// run the server asynchronously
 	runSimpleHTTPServer(addr, done, ctx)
 	// cancel, wait for an error in the channel at the exit scope
@@ -103,8 +104,14 @@ func TestSimpleHTTPServer(t *testing.T) {
 	}
 
 	// create a client a URL
-	url := fmt.Sprintf("http://%s/", addr)
-	client := new(http.Client)
+	url := fmt.Sprintf("https://%s/", addr)
+	client := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 
 	// for each test case
 	for i, testCase := range testCases {
