@@ -21,8 +21,8 @@ func runSimpleHTTPServer(addr string, done chan error, ctx context.Context) {
 		Addr: addr,
 		// wrap the single default handler in a timeout handler
 		Handler: http.TimeoutHandler(
-			// use the default handler
-			handlers.DefaultHandler(),
+			// use the default methods handler
+			handlers.DefaultMethodsHandler(),
 			// handler execution timeout
 			2*time.Minute,
 			// use default message
