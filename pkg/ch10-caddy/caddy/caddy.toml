@@ -1,0 +1,38 @@
+# server named test_server listening on localhost:2020
+[apps.http.servers.test_server]
+listen = [
+  'localhost:2020',
+]
+
+
+# backend route
+[[apps.http.servers.test_server.routes]]
+  # targets (/backend + /backend/*)
+[[apps.http.servers.test_server.routes.match]]
+path = [
+  '/backend',
+  '/backend/*',
+]
+# the only handler - reverse_proxy
+[[apps.http.servers.test_server.routes.handle]]
+handler = 'reverse_proxy'
+# where to reverse-proxy: dial to upstream server on localhost:8080
+[[apps.http.servers.test_server.routes.handle.upstreams]]
+dial = 'localhost:8080'
+
+
+# file server route
+[[apps.http.servers.test_server.routes]]
+# middleware to restrict prefixed paths
+[[apps.http.servers.test_server.routes.handle]]
+handler = 'restrict_prefix'
+prefix = '.'
+# file server handler
+[[apps.http.servers.test_server.routes.handle]]
+handler = 'file_server'
+# root of the file directory
+root = '../files'
+# default resources (when none specified)
+index_names = [
+  'index.html',
+]
