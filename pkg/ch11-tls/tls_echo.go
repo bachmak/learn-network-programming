@@ -148,7 +148,7 @@ func (s *Server) runClientSession(conn net.Conn) {
 	for {
 		// if idle timeout is provided, push the read/write deadline forward
 		if s.idleTimeout != 0 {
-			err := conn.SetDeadline(time.Now().Add(s.idleTimeout * time.Second))
+			err := conn.SetDeadline(time.Now().Add(s.idleTimeout))
 			if err != nil {
 				return
 			}
