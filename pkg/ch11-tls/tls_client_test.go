@@ -31,23 +31,36 @@ func TestClientTLS(t *testing.T) {
 		server.Close()
 	}()
 
-	// create a client corresponding to the test server
-	client := server.Client()
-	// make a GET request
-	resp, err := client.Get(server.URL)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		client *http.Client
+	}{
+		{
+			// client with inherent trust to the server's certificate
+			server.Client(),
+		},
 	}
-	// close body at scope exit
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-	// check that the status is OK
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf(
-			"expected status %d; actual %d",
-			http.StatusOK,
-			resp.StatusCode,
-		)
+
+	for i, testCase := range testCases {
+		func() {
+			// make a GET request
+			resp, err := testCase.client.Get(server.URL)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			// close body at scope exit
+			defer func() {
+				_ = resp.Body.Close()
+			}()
+			// check that the status is OK
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf(
+					"%d: expected status %d; actual %d",
+					i,
+					http.StatusOK,
+					resp.StatusCode,
+				)
+			}
+		}()
 	}
 }
