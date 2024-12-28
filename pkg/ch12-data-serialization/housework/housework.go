@@ -1,6 +1,7 @@
 package housework
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -111,6 +112,31 @@ func FlushJson(writer io.Writer, chores Chores) error {
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	// encode chores
+	err := encoder.Encode(chores)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// func LoadGob (similar to LoadJson)
+func LoadGob(reader io.Reader) (Chores, error) {
+	var chores Chores
+	decoder := gob.NewDecoder(reader)
+
+	err := decoder.Decode(&chores)
+	if err != nil {
+		return nil, err
+	}
+
+	return chores, nil
+}
+
+// func FlushGob (similar to FlushJson)
+func FlushGob(writer io.Writer, chores Chores) error {
+	encoder := gob.NewEncoder(writer)
+
 	err := encoder.Encode(chores)
 	if err != nil {
 		return err

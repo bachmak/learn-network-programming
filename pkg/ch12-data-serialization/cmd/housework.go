@@ -80,8 +80,12 @@ func main() {
 func getLoadAndFlush(dataFile string) (hw.LoadFunc, hw.FlushFunc) {
 	// select appropriate load and flush function pait depending on file extension
 	ext := filepath.Ext(dataFile)
-	if ext == "json" {
+	log.Println("ext: ", ext)
+	switch ext {
+	case ".json":
 		return hw.LoadJson, hw.FlushJson
+	case ".dat", ".gob", ".bin":
+		return hw.LoadGob, hw.FlushGob
 	}
 
 	return hw.LoadJson, hw.FlushJson
