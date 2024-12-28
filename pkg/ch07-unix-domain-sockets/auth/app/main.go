@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"learn-network-programming/pkg/ch7-unix-domain-sockets/auth"
+	"learn-network-programming/pkg/ch07-unix-domain-sockets/auth"
 	"log"
 	"net"
 	"os"
