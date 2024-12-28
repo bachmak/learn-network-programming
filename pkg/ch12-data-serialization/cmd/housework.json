@@ -1,0 +1,18 @@
+[
+  {
+    "Complete": false,
+    "Description": "documents"
+  },
+  {
+    "Complete": true,
+    "Description": "do the laundry"
+  },
+  {
+    "Complete": true,
+    "Description": "something really important"
+  },
+  {
+    "Complete": false,
+    "Description": "hang out with friends"
+  }
+]

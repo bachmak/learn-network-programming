@@ -37,12 +37,12 @@ func (chores *Chores) SetComplete(idx int, complete bool) error {
 
 // load and flush function aliases
 type (
-	loadFunc  func(io.Reader) (Chores, error)
-	flushFunc func(io.Writer, Chores) error
+	LoadFunc  func(io.Reader) (Chores, error)
+	FlushFunc func(io.Writer, Chores) error
 )
 
 // func LoadFromFile
-func LoadFromFile(filename string, load loadFunc) (Chores, error) {
+func LoadFromFile(filename string, load LoadFunc) (Chores, error) {
 	// get file info just to check if a file exists
 	_, err := os.Stat(filename)
 	// return empty chore list if it doesn't
@@ -70,7 +70,7 @@ func LoadFromFile(filename string, load loadFunc) (Chores, error) {
 }
 
 // func FlushToFile
-func FlushToFile(filename string, chores Chores, flush flushFunc) error {
+func FlushToFile(filename string, chores Chores, flush FlushFunc) error {
 	// create the file
 	file, err := os.Create(filename)
 	if err != nil {
@@ -109,6 +109,7 @@ func LoadJson(reader io.Reader) (Chores, error) {
 func FlushJson(writer io.Writer, chores Chores) error {
 	// create encoder
 	encoder := json.NewEncoder(writer)
+	encoder.SetIndent("", "  ")
 	// encode chores
 	err := encoder.Encode(chores)
 	if err != nil {
