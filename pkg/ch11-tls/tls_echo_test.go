@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -51,8 +52,11 @@ func runEchoServerTLS(server *Server, done chan struct{}, t *testing.T) {
 		done <- struct{}{}
 	}()
 
+	certFilname := filepath.Join("cert", "cert.pem")
+	keyFileName := filepath.Join("cert", "key.pem")
+
 	// listen and serve
-	err := server.ListenAndServeTLS("cert.pem", "key.pem")
+	err := server.ListenAndServeTLS(certFilname, keyFileName)
 	// check that server finished correctly
 	if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
 		t.Error(err)
