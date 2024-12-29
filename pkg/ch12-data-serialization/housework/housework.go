@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	hwproto "learn-network-programming/pkg/ch12-data-serialization/housework/v1"
+	hwproto "learn-network-programming/housework/v1"
 	"os"
 
 	"google.golang.org/protobuf/proto"

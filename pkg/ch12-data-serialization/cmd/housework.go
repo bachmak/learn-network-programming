@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	hw "learn-network-programming/pkg/ch12-data-serialization/housework"
+	hw "learn-network-programming/housework"
 	"log"
 	"os"
 	"path/filepath"
