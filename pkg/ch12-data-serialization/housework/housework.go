@@ -5,32 +5,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	hwproto "learn-network-programming/pkg/ch12-data-serialization/housework/v1"
 	"os"
 )
 
 // struct Chore
-type Chore struct {
-	Complete    bool
-	Description string
-}
+type Chore hwproto.Chore
 
 // Chores
-type Chores []*Chore
+type Chores hwproto.Chores
 
 // func Add
-func (chores *Chores) Add(chore Chore) {
-	*chores = append(*chores, &chore)
+func (chores *Chores) Add(chore *Chore) {
+	chores.Chores = append(chores.Chores, (*hwproto.Chore)(chore))
 }
 
 // func SetComplete
 func (chores *Chores) SetComplete(idx int, complete bool) error {
 	// check if index is valid
-	if idx < 0 || idx >= len(*chores) {
+	if idx < 0 || idx >= len(chores.Chores) {
 		return fmt.Errorf("chore %d not found", idx)
 	}
 
 	// set chore completion
-	chore := []*Chore(*chores)[idx]
+	chore := []*hwproto.Chore(chores.Chores)[idx]
 	chore.Complete = complete
 
 	return nil
@@ -38,17 +36,20 @@ func (chores *Chores) SetComplete(idx int, complete bool) error {
 
 // load and flush function aliases
 type (
-	LoadFunc  func(io.Reader) (Chores, error)
-	FlushFunc func(io.Writer, Chores) error
+	LoadFunc  func(io.Reader) (*Chores, error)
+	FlushFunc func(io.Writer, *Chores) error
 )
 
 // func LoadFromFile
-func LoadFromFile(filename string, load LoadFunc) (Chores, error) {
+func LoadFromFile(filename string, load LoadFunc) (*Chores, error) {
 	// get file info just to check if a file exists
 	_, err := os.Stat(filename)
 	// return empty chore list if it doesn't
 	if os.IsNotExist(err) {
-		return make(Chores, 0), nil
+		chores := Chores{
+			Chores: make([]*hwproto.Chore, 0),
+		}
+		return &chores, nil
 	}
 
 	// open the file
@@ -71,7 +72,7 @@ func LoadFromFile(filename string, load LoadFunc) (Chores, error) {
 }
 
 // func FlushToFile
-func FlushToFile(filename string, chores Chores, flush FlushFunc) error {
+func FlushToFile(filename string, chores *Chores, flush FlushFunc) error {
 	// create the file
 	file, err := os.Create(filename)
 	if err != nil {
@@ -92,9 +93,9 @@ func FlushToFile(filename string, chores Chores, flush FlushFunc) error {
 }
 
 // func LoadJson
-func LoadJson(reader io.Reader) (Chores, error) {
+func LoadJson(reader io.Reader) (*Chores, error) {
 	// create an empty chore list and a decoder
-	var chores Chores
+	chores := Chores{}
 	decoder := json.NewDecoder(reader)
 
 	// decode chores
@@ -103,11 +104,11 @@ func LoadJson(reader io.Reader) (Chores, error) {
 		return nil, err
 	}
 
-	return chores, nil
+	return &chores, nil
 }
 
 // func FlushJson
-func FlushJson(writer io.Writer, chores Chores) error {
+func FlushJson(writer io.Writer, chores *Chores) error {
 	// create encoder
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
@@ -121,8 +122,8 @@ func FlushJson(writer io.Writer, chores Chores) error {
 }
 
 // func LoadGob (similar to LoadJson)
-func LoadGob(reader io.Reader) (Chores, error) {
-	var chores Chores
+func LoadGob(reader io.Reader) (*Chores, error) {
+	chores := Chores{}
 	decoder := gob.NewDecoder(reader)
 
 	err := decoder.Decode(&chores)
@@ -130,11 +131,11 @@ func LoadGob(reader io.Reader) (Chores, error) {
 		return nil, err
 	}
 
-	return chores, nil
+	return &chores, nil
 }
 
 // func FlushGob (similar to FlushJson)
-func FlushGob(writer io.Writer, chores Chores) error {
+func FlushGob(writer io.Writer, chores *Chores) error {
 	encoder := gob.NewEncoder(writer)
 
 	err := encoder.Encode(chores)

@@ -1,18 +1,19 @@
-[
-  {
-    "Complete": false,
-    "Description": "documents"
-  },
-  {
-    "Complete": true,
-    "Description": "do the laundry"
-  },
-  {
-    "Complete": true,
-    "Description": "something really important"
-  },
-  {
-    "Complete": false,
-    "Description": "hang out with friends"
-  }
-]
+{
+  "chores": [
+    {
+      "description": "documents"
+    },
+    {
+      "complete": true,
+      "description": "do the laundry"
+    },
+    {
+      "complete": true,
+      "description": "something really important"
+    },
+    {
+      "complete": true,
+      "description": "hang out with friends"
+    }
+  ]
+}

@@ -57,10 +57,10 @@ func main() {
 	switch cmd {
 	case "add":
 		// add chores to the list
-		add(&chores, parseDescriptions(flag.Args()[1:]))
+		add(chores, parseDescriptions(flag.Args()[1:]))
 	case "complete":
 		// complete selected chore
-		err = complete(&chores, flag.Arg(1))
+		err = complete(chores, flag.Arg(1))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +80,6 @@ func main() {
 func getLoadAndFlush(dataFile string) (hw.LoadFunc, hw.FlushFunc) {
 	// select appropriate load and flush function pait depending on file extension
 	ext := filepath.Ext(dataFile)
-	log.Println("ext: ", ext)
 	switch ext {
 	case ".json":
 		return hw.LoadJson, hw.FlushJson
@@ -114,7 +113,7 @@ func parseDescriptions(descStrs []string) []string {
 func add(chores *hw.Chores, descs []string) {
 	// add new chores for all descriptions (not completed by default)
 	for _, desc := range descs {
-		chore := hw.Chore{
+		chore := &hw.Chore{
 			Complete:    false,
 			Description: desc,
 		}
@@ -136,12 +135,12 @@ func complete(chores *hw.Chores, idxStr string) error {
 }
 
 // func list
-func list(chores hw.Chores) {
+func list(chores *hw.Chores) {
 	// show header
 	fmt.Printf("#\t[X]\tDescription\n")
 
 	// show chores
-	for idx, chore := range chores {
+	for idx, chore := range chores.Chores {
 		// helper function to show completion status
 		complete := func() string {
 			if chore.Complete {
