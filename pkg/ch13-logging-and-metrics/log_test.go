@@ -51,3 +51,41 @@ func Example_logMultiWriter() {
 	// log file contents:
 	// log_test.go:42: example: Canada is south of Detroit
 }
+
+func Example_logLevels() {
+	// debug logger to print to stdout with prefix DEBUG
+	lDebug := log.New(
+		os.Stdout,
+		"DEBUG: ",
+		log.Lshortfile,
+	)
+	// imitate log file
+	logFile := new(bytes.Buffer)
+	// multiwriter for the error logger (to the debug + to the log file)
+	w := SustainedMultiwriter(lDebug.Writer(), logFile)
+	// error logger to multiwriter with prefix ERROR
+	lError := log.New(
+		w,
+		"ERROR: ",
+		log.Lshortfile,
+	)
+
+	// print header
+	fmt.Println("standard output:")
+	// print to the error logger
+	lError.Print("cannot communicate with the database")
+	// print to the debug logger
+	lDebug.Print("you cannot hum while holding your nose")
+
+	fmt.Print("\nlog file contents:\n", logFile.String())
+
+	// print log file contents
+
+	// Output:
+	// standard output:
+	// ERROR: log_test.go:76: cannot communicate with the database
+	// DEBUG: log_test.go:78: you cannot hum while holding your nose
+	//
+	// log file contents:
+	// ERROR: log_test.go:76: cannot communicate with the database
+}
