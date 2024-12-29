@@ -1,0 +1,20 @@
+// specify syntax
+syntax = "proto3";
+// specify package
+package housework;
+
+// specify Go package as an option
+option go_package = "learn-network-programming/pkg/ch12-data-serialization/housework/v1/housework";
+
+// Chore
+message Chore {
+  bool complete = 1;
+  string description = 2;
+}
+
+// Chores
+message Chores {
+  repeated Chore chores = 1;
+}
+
+// run protoc --go_out=. /absolute/path/to/the/proto/file
