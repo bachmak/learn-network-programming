@@ -85,6 +85,8 @@ func getLoadAndFlush(dataFile string) (hw.LoadFunc, hw.FlushFunc) {
 		return hw.LoadJson, hw.FlushJson
 	case ".dat", ".gob", ".bin":
 		return hw.LoadGob, hw.FlushGob
+	case ".pb":
+		return hw.LoadProto, hw.FlushProto
 	}
 
 	return hw.LoadJson, hw.FlushJson

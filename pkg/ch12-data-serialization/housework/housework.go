@@ -7,6 +7,8 @@ import (
 	"io"
 	hwproto "learn-network-programming/pkg/ch12-data-serialization/housework/v1"
 	"os"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // struct Chore
@@ -139,6 +141,35 @@ func FlushGob(writer io.Writer, chores *Chores) error {
 	encoder := gob.NewEncoder(writer)
 
 	err := encoder.Encode(chores)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func LoadProto(reader io.Reader) (*Chores, error) {
+	bytes, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	chores := hwproto.Chores{}
+	err = proto.Unmarshal(bytes, &chores)
+	if err != nil {
+		return nil, err
+	}
+
+	return (*Chores)(&chores), nil
+}
+
+func FlushProto(writer io.Writer, chores *Chores) error {
+	bytes, err := proto.Marshal((*hwproto.Chores)(chores))
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(bytes)
 	if err != nil {
 		return err
 	}
