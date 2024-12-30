@@ -61,3 +61,28 @@ func Example_zapJSON() {
 	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:56","msg":"test debug message","version":"go1.23.4"}
 	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:58","msg":"test info message","version":"go1.23.4"}
 }
+
+func Example_zapConsole() {
+	// create ecoder, sink, and core (info level)
+	encoder := zapcore.NewConsoleEncoder(encoderConfig)
+	syncer := zapcore.Lock(os.Stdout)
+	core := zapcore.NewCore(encoder, syncer, zapcore.InfoLevel)
+
+	// create logger (options are empty meaning caller won't be logged)
+	zl := zap.New(core)
+	// sync at scope exit
+	defer func() {
+		_ = zl.Sync()
+	}()
+
+	// create named console logger
+	console := zl.Named("[console]")
+	// log with levels info, debug, and error
+	console.Info("this is logged by the logger")
+	console.Debug("this is below the logger's threshold and won't log")
+	console.Error("this is also logged by the logger")
+
+	// Output:
+	// info	[console]	this is logged by the logger
+	// error	[console]	this is also logged by the logger
+}
