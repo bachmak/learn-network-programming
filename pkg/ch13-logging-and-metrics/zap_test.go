@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -60,8 +61,8 @@ func Example_zapJSON() {
 	example.Info("test info message")
 
 	// Output:
-	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:58","msg":"test debug message","version":"go1.23.4"}
-	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:60","msg":"test info message","version":"go1.23.4"}
+	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:59","msg":"test debug message","version":"go1.23.4"}
+	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:61","msg":"test info message","version":"go1.23.4"}
 }
 
 func Example_zapConsole() {
@@ -157,4 +158,52 @@ func Example_zapInfoFileDebugConsole() {
 	// file contents:
 	// {"level":"error","msg":"this is logged by the logger"}
 	// {"level":"info","msg":"this is logged as console encoding and JSON"}
+}
+
+// func Example_zapSampling
+func Example_zapSampling() {
+	// new core (format: json, syncer: stdout)
+	encoder := zapcore.NewJSONEncoder(encoderConfig)
+	syncer := zapcore.Lock(os.Stdout)
+	core := zapcore.NewCore(encoder, syncer, zapcore.DebugLevel)
+
+	// new sampler (tick = 1 sec, first = 1, thereafter = 3)
+	sampler := zapcore.NewSamplerWithOptions(core, time.Second, 1, 3)
+
+	// new log based on the sampler
+	zl := zap.New(sampler)
+	// defer sync
+	defer func() {
+		_ = zl.Sync()
+	}()
+
+	// iterate 10 times, the sampler should log each unique message and
+	// only each 3rd repetetive one or when sampling interval is expired
+	for i := 0; i < 10; i++ {
+		// sleep on the 5th iteration to "force" the sampler to log
+		if i == 5 {
+			time.Sleep(time.Second)
+		}
+
+		// unique debug message
+		zl.Debug(fmt.Sprintf("%d", i))
+		// repetetive debug message
+		zl.Debug("the same message")
+	}
+
+	// Output:
+	// {"level":"debug","msg":"0"}
+	// {"level":"debug","msg":"the same message"}
+	// {"level":"debug","msg":"1"}
+	// {"level":"debug","msg":"2"}
+	// {"level":"debug","msg":"3"}
+	// {"level":"debug","msg":"the same message"}
+	// {"level":"debug","msg":"4"}
+	// {"level":"debug","msg":"5"}
+	// {"level":"debug","msg":"the same message"}
+	// {"level":"debug","msg":"6"}
+	// {"level":"debug","msg":"7"}
+	// {"level":"debug","msg":"8"}
+	// {"level":"debug","msg":"the same message"}
+	// {"level":"debug","msg":"9"}
 }
