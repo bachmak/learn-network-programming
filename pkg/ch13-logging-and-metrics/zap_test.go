@@ -3,9 +3,12 @@ package ch13
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -61,8 +64,8 @@ func Example_zapJSON() {
 	example.Info("test info message")
 
 	// Output:
-	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:59","msg":"test debug message","version":"go1.23.4"}
-	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:61","msg":"test info message","version":"go1.23.4"}
+	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:62","msg":"test debug message","version":"go1.23.4"}
+	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:64","msg":"test info message","version":"go1.23.4"}
 }
 
 func Example_zapConsole() {
@@ -206,4 +209,128 @@ func Example_zapSampling() {
 	// {"level":"debug","msg":"8"}
 	// {"level":"debug","msg":"the same message"}
 	// {"level":"debug","msg":"9"}
+}
+
+// func Example_zapDynamicDebugging
+func Example_zapDynamicDebugging() {
+	// create a JSON-encoder, syncer, but atomic leveler instead of a constant value
+	encoder := zapcore.NewJSONEncoder(encoderConfig)
+	syncer := zapcore.Lock(os.Stdout)
+	atomicLevel := zap.NewAtomicLevel()
+	// create the core
+	core := zapcore.NewCore(encoder, syncer, atomicLevel)
+
+	// create the logger
+	zl := zap.New(core)
+	defer func() {
+		_ = zl.Sync()
+	}()
+
+	// make a temporary directory for the semaphore file
+	tempDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+	// semaphore file name
+	semaphoreFile := filepath.Join(tempDir, "level.debug")
+
+	// run semaphore file state change tracking in the background
+	ready := make(chan struct{})
+	go changeLogLevelOnFileChange(atomicLevel, semaphoreFile, ready)
+	// wait for the goroutine to init its state
+	<-ready
+
+	// try logging a debug message (shouldn't log)
+	zl.Debug("this is below the logger's threshold")
+
+	// create the semaphore file and close it immediately (since the existence is only important)
+	sf, err := os.Create(semaphoreFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = sf.Close()
+	// wait for the goroutine to catch up with the filesystem changes
+	<-ready
+
+	// try logging a debug message (should log this time)
+	zl.Debug("this is now at the logger's threshold")
+
+	// remove the semaphore file and wait for the goroutine to handle it
+	err = os.Remove(semaphoreFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-ready
+
+	// try logging a debug and an info messages (should log info only)
+	zl.Debug("this is below the logger's threshold again")
+	zl.Info("this is at the logger's current threshold")
+
+	// Output:
+	// {"level":"debug","msg":"this is now at the logger's threshold"}
+	// {"level":"info","msg":"this is at the logger's current threshold"}
+}
+
+// func changeLogLevelOnFileChange
+func changeLogLevelOnFileChange(
+	atomicLevel zap.AtomicLevel,
+	semaphoreFile string,
+	ready chan struct{},
+) {
+	// create a filesystem watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// close the watcher at scope exit
+	defer func() {
+		_ = watcher.Close()
+	}()
+
+	// add the semaphore file's directory to the watched list
+	dir := filepath.Dir(semaphoreFile)
+	err = watcher.Add(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// preserve the original level before changes
+	originalLevel := atomicLevel.Level()
+
+	// notify ready to track changes
+	ready <- struct{}{}
+
+	// run in a loop
+	for {
+		// wait for either a watcher event or an error
+		// in both cases, return if a channel is closed
+		select {
+		case e, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			// filter only the events related to the semaphore file
+			if e.Name == semaphoreFile {
+				switch {
+				case e.Op&fsnotify.Create == fsnotify.Create:
+					// if the operation is create, set debug level to debug
+					atomicLevel.SetLevel(zapcore.DebugLevel)
+					ready <- struct{}{}
+
+				case e.Op&fsnotify.Remove == fsnotify.Remove:
+					// if the operation is remove, set back the original level
+					atomicLevel.SetLevel(originalLevel)
+					ready <- struct{}{}
+				}
+			}
+		case e, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Fatal(e.Error())
+		}
+	}
 }

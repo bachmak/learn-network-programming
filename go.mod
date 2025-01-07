@@ -5,6 +5,12 @@ go 1.22.0
 toolchain go1.23.4
 
 require (
+	github.com/fsnotify/fsnotify v1.4.7
+	go.uber.org/multierr v1.11.0
+	go.uber.org/zap v1.27.0
+)
+
+require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
@@ -125,8 +131,6 @@ require (
 	go.step.sm/linkedca v0.20.1 // indirect
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/mock v0.4.0 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	go.uber.org/zap/exp v0.2.0 // indirect
 	golang.org/x/crypto v0.30.0 // indirect
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20240507223354-67b13616a595 // indirect
