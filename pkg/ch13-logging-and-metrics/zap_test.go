@@ -11,6 +11,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // encoder config (agnostic of specific formats encoders use)
@@ -64,8 +65,8 @@ func Example_zapJSON() {
 	example.Info("test info message")
 
 	// Output:
-	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:62","msg":"test debug message","version":"go1.23.4"}
-	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:64","msg":"test info message","version":"go1.23.4"}
+	// {"level":"debug","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:63","msg":"test debug message","version":"go1.23.4"}
+	// {"level":"info","name":"example","caller":"ch13-logging-and-metrics/zap_test.go:65","msg":"test info message","version":"go1.23.4"}
 }
 
 func Example_zapConsole() {
@@ -333,4 +334,49 @@ func changeLogLevelOnFileChange(
 			log.Fatal(e.Error())
 		}
 	}
+}
+
+// func Example_zapLogRotation
+func Example_zapLogRotation() {
+	// create a temporary directory and clean it up at scope exit
+	tempDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+
+	// create a typical JSON encoder
+	encoder := zapcore.NewJSONEncoder(encoderConfig)
+	// create a lumberjack logger managing log file rotation etc.
+	rotatingLogger := &lumberjack.Logger{
+		// specify filename (default is <processname>-lumberjack.log)
+		Filename: filepath.Join(tempDir, "debug.log"),
+		// maximum size of a log file in megabytes
+		MaxSize: 100,
+		// maximum logfile age before it should be rotated
+		MaxAge: 7,
+		// maximum amount of rotated log files to keep
+		MaxBackups: 5,
+		// use local time instead of UTC
+		LocalTime: true,
+		// do compress
+		Compress: true,
+	}
+	// add output synchronization to the lumberjack logger
+	syncer := zapcore.AddSync(rotatingLogger)
+	// create a core
+	core := zapcore.NewCore(encoder, syncer, zapcore.DebugLevel)
+
+	// create a logger
+	zl := zap.New(core)
+	defer func() {
+		_ = zl.Sync()
+	}()
+
+	// log some message
+	zl.Debug("debug messsage written to the log file")
+
+	// Output:
 }
