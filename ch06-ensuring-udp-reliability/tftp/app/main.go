@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"learn-network-programming/pkg/ch06-ensuring-udp-reliability/tftp"
+	"learn-network-programming/ch06-ensuring-udp-reliability/tftp"
 	"log"
 	"os"
 )

@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"learn-network-programming/pkg/ch13-logging-and-metrics/instrumentation/metrics"
+	"learn-network-programming/ch13-logging-and-metrics/instrumentation/metrics"
 	"log"
 	"net"
 	"net/http"

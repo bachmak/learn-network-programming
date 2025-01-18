@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"learn-network-programming/pkg/ch09-building-http-services/handlers"
-	"learn-network-programming/pkg/ch09-building-http-services/middleware"
+	"learn-network-programming/ch09-building-http-services/handlers"
+	"learn-network-programming/ch09-building-http-services/middleware"
 	"log"
 	"net/http"
 	"os"

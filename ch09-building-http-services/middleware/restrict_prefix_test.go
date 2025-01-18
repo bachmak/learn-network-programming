@@ -1,7 +1,7 @@
 package middleware_test
 
 import (
-	"learn-network-programming/pkg/ch09-building-http-services/middleware"
+	"learn-network-programming/ch09-building-http-services/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
